@@ -1,0 +1,153 @@
+'use client'
+
+import { useVibrate } from '@/lib/hooks'
+import { useAppStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase/client'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Loader2, Lock, UserX } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+export function SettingsPrivacyScreen() {
+  const vibrate = useVibrate()
+  const { setStage, user } = useAppStore()
+  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState({
+    verifiedOnly: true,
+    readReceipts: true,
+    showOnline: true,
+  })
+
+  // Load Settings from DB
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('settings')
+        .eq('user_id', user.id)
+        .single()
+
+      const privacySettings = (data as any)?.settings?.privacy
+      if (privacySettings) {
+        setSettings(privacySettings)
+      }
+      setLoading(false)
+    }
+    loadSettings()
+  }, [user])
+
+  const handleToggle = async (key: keyof typeof settings, value: boolean) => {
+    const updatedPrivacy = { ...settings, [key]: value }
+    setSettings(updatedPrivacy)
+    vibrate([10])
+
+    if (user) {
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('settings')
+        .eq('user_id', user.id)
+        .single()
+
+      const newSettings = {
+        ...((currentProfile as any)?.settings || {}),
+        privacy: updatedPrivacy,
+      }
+
+      await (supabase as any)
+        .from('profiles')
+        .update({ settings: newSettings })
+        .eq('user_id', user.id)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-black min-h-screen">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-col h-full bg-black min-h-screen text-white"
+    >
+      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-3">
+        <button
+          onClick={() => setStage('settings')}
+          className="p-2 hover:bg-slate-900 rounded-full transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-lg font-black uppercase tracking-widest">PRIVACY</h1>
+      </header>
+      <main className="flex-1 p-4 space-y-6">
+        <div className="bg-slate-950 border border-slate-800 rounded-2xl divide-y divide-slate-800">
+          <PrivacyToggle
+            title="Verified Only"
+            description="Only show my profile to ID-Verified members."
+            checked={settings.verifiedOnly}
+            onChange={(v: boolean) => handleToggle('verifiedOnly', v)}
+          />
+          <PrivacyToggle
+            title="Read Receipts"
+            description="Show others when you have read their messages."
+            checked={settings.readReceipts}
+            onChange={(v: boolean) => handleToggle('readReceipts', v)}
+          />
+          <PrivacyToggle
+            title="Online Status"
+            description="Show when you are currently active on the platform."
+            checked={settings.showOnline}
+            onChange={(v: boolean) => handleToggle('showOnline', v)}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Account Security
+          </h4>
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800">
+            <button className="w-full p-5 flex items-center justify-between hover:bg-slate-900 transition text-left">
+              <div className="flex gap-4">
+                <Lock className="w-5 h-5 text-slate-400" />
+                <span className="text-sm font-bold">Two-Factor Authentication</span>
+              </div>
+              <span className="text-[10px] font-black text-amber-500">ENABLE</span>
+            </button>
+            <button className="w-full p-5 flex items-center justify-between hover:bg-slate-900 transition text-left">
+              <div className="flex gap-4">
+                <UserX className="w-5 h-5 text-slate-400" />
+                <span className="text-sm font-bold">Blocked Members</span>
+              </div>
+              <span className="text-[10px] font-black text-slate-500">0 BLOCKED</span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </motion.div>
+  )
+}
+
+function PrivacyToggle({ title, description, checked, onChange }: any) {
+  return (
+    <div className="p-5 flex items-center justify-between gap-4">
+      <div>
+        <h4 className="text-sm font-bold">{title}</h4>
+        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <div
+        onClick={() => onChange(!checked)}
+        className={`w-12 h-6 rounded-full relative p-1 cursor-pointer transition-colors ${checked ? 'bg-amber-600' : 'bg-slate-800'}`}
+      >
+        <motion.div
+          animate={{ x: checked ? 24 : 0 }}
+          className="w-4 h-4 bg-white rounded-full shadow-lg"
+        />
+      </div>
+    </div>
+  )
+}

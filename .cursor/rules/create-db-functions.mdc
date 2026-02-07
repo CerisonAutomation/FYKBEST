@@ -1,0 +1,517 @@
+---
+
+description: Guidelines for writing Supabase database functions
+alwaysApply: true
+---
+
+# Database: Create functions
+
+You're a Supabase Postgres expert in writing database functions. Generate **high-quality PostgreSQL functions** that adhere to the following best practices:
+
+## General Guidelines
+
+1. **Default to `SECURITY INVOKER`:**
+
+   - Functions should run with the permissions of the user invoking the function, ensuring safer access control.
+   - Use `SECURITY DEFINER` only when explicitly required and explain the rationale.
+
+2. **Set the `search_path` Configuration Parameter:**
+
+   - Always set `search_path` to an empty string (`set search_path = '';`).
+   - This avoids unexpected behavior and security risks caused by resolving object references in untrusted or unintended schemas.
+   - Use fully qualified names (e.g., `schema_name.table_name`) for all database objects referenced within the function.
+
+3. **Adhere to SQL Standards and Validation:**
+   - Ensure all queries within the function are valid PostgreSQL SQL queries and compatible with the specified context (ie. Supabase).
+
+## Best Practices
+
+1. **Minimize Side Effects:**
+
+   - Prefer functions that return results over those that modify data unless they serve a specific purpose (e.g., triggers).
+
+2. **Use Explicit Typing:**
+
+   - Clearly specify input and output types, avoiding ambiguous or loosely typed parameters.
+
+3. **Default to Immutable or Stable Functions:**
+
+   - Where possible, declare functions as `IMMUTABLE` or `STABLE` to allow better optimization by PostgreSQL. Use `VOLATILE` only if the function modifies data or has side effects.
+
+4. **Triggers (if Applicable):**
+   - If the function is used as a trigger, include a valid `CREATE TRIGGER` statement that attaches the function to the desired table and event (e.g., `BEFORE INSERT`).
+
+## Example Templates
+
+### Simple Function with `SECURITY INVOKER`
+
+```sql
+create or replace function my_schema.hello_world()
+returns text
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  return 'hello world';
+end;
+$$;
+```
+
+### Function with Parameters and Fully Qualified Object Names
+
+```sql
+create or replace function public.calculate_total_price(order_id bigint)
+returns numeric
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  total numeric;
+begin
+  select sum(price * quantity)
+  into total
+  from public.order_items
+  where order_id = calculate_total_price.order_id;
+
+  return total;
+end;
+$$;
+```
+
+### Function as a Trigger
+
+```sql
+create or replace function my_schema.update_updated_at()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  -- Update the "updated_at" column on row modification
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+create trigger update_updated_at_trigger
+before update on my_schema.my_table
+for each row
+execute function my_schema.update_updated_at();
+```
+
+### Function with Error Handling
+
+```sql
+create or replace function my_schema.safe_divide(numerator numeric, denominator numeric)
+returns numeric
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if denominator = 0 then
+    raise exception 'Division by zero is not allowed';
+  end if;
+
+  return numerator / denominator;
+end;
+$$;
+```
+
+### Function with Row Level Security (RLS) Integration
+
+```sql
+create or replace function public.get_user_profile()
+returns table (
+  id uuid,
+  email text,
+  full_name text,
+  avatar_url text,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+language plpgsql
+security invoker
+set search_path = ''
+stable
+as $$
+begin
+  return query
+  select
+    p.id,
+    p.email,
+    p.full_name,
+    p.avatar_url,
+    p.created_at,
+    p.updated_at
+  from public.profiles p
+  where p.id = auth.uid();
+end;
+$$;
+```
+
+### Function with JSON Operations
+
+```sql
+create or replace function public.update_user_preferences(preferences jsonb)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+volatile
+as $$
+declare
+  updated_preferences jsonb;
+begin
+  update public.profiles
+  set preferences = coalesce(preferences, '{}'::jsonb),
+      updated_at = now()
+  where id = auth.uid()
+  returning preferences into updated_preferences;
+
+  return updated_preferences;
+end;
+$$;
+```
+
+### Function with Transaction Safety
+
+```sql
+create or replace function public.transfer_funds(
+  from_account_id uuid,
+  to_account_id uuid,
+  amount numeric
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+volatile
+as $$
+declare
+  from_balance numeric;
+  to_balance numeric;
+begin
+  -- Check sender's balance
+  select balance into from_balance
+  from public.accounts
+  where id = from_account_id and user_id = auth.uid();
+
+  if from_balance < amount then
+    raise exception 'Insufficient funds';
+  end if;
+
+  -- Perform atomic transfer
+  update public.accounts
+  set balance = balance - amount
+  where id = from_account_id;
+
+  update public.accounts
+  set balance = balance + amount
+  where id = to_account_id;
+
+  -- Record transaction
+  insert into public.transactions (from_account_id, to_account_id, amount, user_id)
+  values (from_account_id, to_account_id, amount, auth.uid());
+
+  return true;
+
+exception
+  when others then
+    raise notice 'Transfer failed: %', SQLERRM;
+    return false;
+end;
+$$;
+```
+
+### Function with Array Operations
+
+```sql
+create or replace function public.get_user_roles()
+returns text[]
+language sql
+security invoker
+set search_path = ''
+stable
+as $$
+  select array_agg(role_name)
+  from public.user_roles
+  where user_id = auth.uid()
+  and is_active = true;
+$$;
+```
+
+### Function with Conditional Logic
+
+```sql
+create or replace function public.calculate_user_tier(user_id uuid)
+returns text
+language plpgsql
+security invoker
+set search_path = ''
+stable
+as $$
+declare
+  total_spent numeric;
+  account_age interval;
+begin
+  select
+    coalesce(sum(total_amount), 0),
+    now() - min(created_at)
+  into total_spent, account_age
+  from public.orders
+  where user_id = calculate_user_tier.user_id;
+
+  case
+    when total_spent >= 10000 then return 'platinum';
+    when total_spent >= 5000 then return 'gold';
+    when total_spent >= 1000 then return 'silver';
+    when account_age >= interval '1 year' then return 'bronze';
+    else return 'basic';
+  end case;
+end;
+$$;
+```
+
+### Function for Soft Delete Pattern
+
+```sql
+create or replace function public.soft_delete_record(table_name text, record_id uuid)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+volatile
+as $$
+begin
+  execute format(
+    'update %I set deleted_at = now(), deleted_by = %L where id = %L',
+    table_name, auth.uid(), record_id
+  );
+
+  return found;
+end;
+$$;
+```
+
+### Function with Audit Trail
+
+```sql
+create or replace function public.audit_table_changes()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  audit_action text;
+begin
+  if TG_OP = 'INSERT' then
+    audit_action := 'CREATE';
+    insert into public.audit_logs (table_name, record_id, action, new_data, user_id, timestamp)
+    values (TG_TABLE_NAME, new.id, audit_action, to_jsonb(new), auth.uid(), now());
+    return new;
+
+  elsif TG_OP = 'UPDATE' then
+    audit_action := 'UPDATE';
+    insert into public.audit_logs (table_name, record_id, action, old_data, new_data, user_id, timestamp)
+    values (TG_TABLE_NAME, new.id, audit_action, to_jsonb(old), to_jsonb(new), auth.uid(), now());
+    return new;
+
+  elsif TG_OP = 'DELETE' then
+    audit_action := 'DELETE';
+    insert into public.audit_logs (table_name, record_id, action, old_data, user_id, timestamp)
+    values (TG_TABLE_NAME, old.id, audit_action, to_jsonb(old), auth.uid(), now());
+    return old;
+  end if;
+
+  return null;
+end;
+$$;
+
+-- Example trigger usage
+create trigger audit_profiles_trigger
+after insert or update or delete on public.profiles
+for each row
+execute function public.audit_table_changes();
+```
+
+## Supabase-Specific Guidelines
+
+### 1. Authentication Integration
+- Always use `auth.uid()` to get the current user's ID
+- Use `auth.role()` to check user roles when needed
+- Leverage `auth.jwt()` for custom claims extraction
+
+### 2. Row Level Security (RLS) Compatibility
+- Functions should respect RLS policies by default
+- Use `SECURITY DEFINER` sparingly and with proper checks
+- Consider creating separate functions for admin operations
+
+### 3. Performance Optimization
+- Use `STABLE` or `IMMUTABLE` for read-only functions
+- Add appropriate indexes for frequently accessed data
+- Consider materialized views for complex aggregations
+
+### 4. Error Handling Best Practices
+- Use descriptive error messages with `raise exception`
+- Log important operations with `raise notice` or `raise log`
+- Handle exceptions gracefully with `exception` blocks
+
+### 5. Testing and Validation
+- Always validate input parameters
+- Check for null values and handle appropriately
+- Use `coalesce()` for default values when needed
+
+## Security Considerations
+
+### 1. SQL Injection Prevention
+- Always use parameterized queries with `format()` and `%L` for literals
+- Never concatenate user input directly into SQL strings
+- Validate and sanitize all inputs
+
+### 2. Permission Management
+- Default to `SECURITY INVOKER` for user-facing functions
+- Use `SECURITY DEFINER` only for system operations with proper checks
+- Implement proper ownership and grants
+
+### 3. Data Privacy
+- Never expose sensitive data unnecessarily
+- Use views to limit data exposure
+- Implement proper data masking where required
+
+## Common Patterns
+
+### 1. User Profile Management
+```sql
+create or replace function public.update_profile(profile_data jsonb)
+returns public.profiles
+language plpgsql
+security invoker
+set search_path = ''
+volatile
+as $$
+begin
+  update public.profiles
+  set
+    full_name = coalesce((profile_data->>'full_name')::text, full_name),
+    avatar_url = coalesce((profile_data->>'avatar_url')::text, avatar_url),
+    updated_at = now()
+  where id = auth.uid()
+  returning *;
+
+  if not found then
+    raise exception 'Profile not found';
+  end if;
+end;
+$$;
+```
+
+### 2. Permission Checking
+```sql
+create or replace function public.check_resource_permission(resource_id uuid, required_permission text)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+stable
+as $$
+declare
+  has_permission boolean := false;
+begin
+  select count(*) > 0 into has_permission
+  from public.user_permissions up
+  join public.permissions p on up.permission_id = p.id
+  where up.user_id = auth.uid()
+  and p.name = required_permission
+  and up.is_active = true;
+
+  return has_permission;
+end;
+$$;
+```
+
+### 3. Pagination Support
+```sql
+create or replace function public.get_paginated_data(
+  page_size int default 20,
+  page_number int default 1,
+  sort_column text default 'created_at',
+  sort_direction text default 'desc'
+)
+returns table (
+  data jsonb,
+  total_count bigint,
+  page_number int,
+  page_size int,
+  total_pages int
+)
+language plpgsql
+security invoker
+set search_path = ''
+stable
+as $$
+declare
+  offset_val int;
+  total_pages_val int;
+  total_count_val bigint;
+begin
+  offset_val := (page_number - 1) * page_size;
+
+  select count(*) into total_count_val
+  from public.your_table
+  where user_id = auth.uid();
+
+  total_pages_val := ceil(total_count_val::numeric / page_size);
+
+  return query
+  select
+    jsonb_agg(row_to_json(t)) as data,
+    total_count_val as total_count,
+    page_number,
+    page_size,
+    total_pages_val as total_pages
+  from (
+    select *
+    from public.your_table
+    where user_id = auth.uid()
+    order by
+      case
+        when sort_direction = 'asc' then
+          case sort_column
+            when 'created_at' then created_at
+            when 'updated_at' then updated_at
+            else id
+          end
+      end asc,
+      case
+        when sort_direction = 'desc' then
+          case sort_column
+            when 'created_at' then created_at
+            when 'updated_at' then updated_at
+            else id
+          end
+      end desc
+    limit page_size
+    offset offset_val
+  ) t;
+end;
+$$;
+```
+
+### Immutable Function for Better Optimization
+
+```sql
+create or replace function my_schema.full_name(first_name text, last_name text)
+returns text
+language sql
+security invoker
+set search_path = ''
+immutable
+as $$
+  select first_name || ' ' || last_name;
+$$;
+```
