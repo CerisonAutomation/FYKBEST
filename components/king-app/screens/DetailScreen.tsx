@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
@@ -18,7 +19,9 @@ import {
   Shield,
   Star,
 } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { ReportModal } from '../modals/ReportModal'
 
 // Generate stable IDs to prevent hydration mismatch

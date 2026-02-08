@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
@@ -13,8 +14,10 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type React from 'react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface AISettingProps {
   icon: React.ReactNode

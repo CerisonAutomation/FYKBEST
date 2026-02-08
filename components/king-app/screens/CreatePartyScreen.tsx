@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
@@ -13,7 +14,9 @@ import {
   MapPin,
   Users,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function CreatePartyScreen() {
   const vibrate = useVibrate()
@@ -52,8 +55,9 @@ export function CreatePartyScreen() {
 
       setStage('party')
     } catch (err) {
-      console.error(err)
+      console.error('[CreatePartyScreen] Failed to create party:', err)
       alert('Failed to create party. Check your connection.')
+      console.error('[CreatePartyScreen] Party creation error:', err)
     } finally {
       setLoading(false)
     }

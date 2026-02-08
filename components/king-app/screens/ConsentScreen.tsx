@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { BarChart3, Bell, Check, Cookie, Shield } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { toast } from 'sonner'
 
 export function ConsentScreen() {
   const vibrate = useVibrate()

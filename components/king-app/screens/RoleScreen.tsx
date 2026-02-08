@@ -1,10 +1,13 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Crown, Heart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type React from 'react'
+import { toast } from 'sonner'
 
 export function RoleScreen() {
   const vibrate = useVibrate()

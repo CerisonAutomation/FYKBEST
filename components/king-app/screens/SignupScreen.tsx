@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Camera, Eye, EyeOff, Lock, Mail, Sparkles, User } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function SignupScreen() {
   const vibrate = useVibrate()
@@ -163,7 +163,9 @@ export function SignupScreen() {
                       setFormErrors((prev) => ({ ...prev, name: '' }))
                     }}
                     className={`w-full pl-12 pr-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all text-base sm:text-lg ${
-                      formErrors.name ? 'border-red-500/50 focus:ring-red-500/50' : 'border-slate-700 focus:ring-amber-500/50'
+                      formErrors.name
+                        ? 'border-red-500/50 focus:ring-red-500/50'
+                        : 'border-slate-700 focus:ring-amber-500/50'
                     }`}
                     aria-label="Full name"
                   />
@@ -175,7 +177,9 @@ export function SignupScreen() {
 
               {/* Email Input */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Email Address
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input
@@ -187,7 +191,9 @@ export function SignupScreen() {
                       setFormErrors((prev) => ({ ...prev, email: '' }))
                     }}
                     className={`w-full pl-12 pr-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all text-base sm:text-lg ${
-                      formErrors.email ? 'border-red-500/50 focus:ring-red-500/50' : 'border-slate-700 focus:ring-amber-500/50'
+                      formErrors.email
+                        ? 'border-red-500/50 focus:ring-red-500/50'
+                        : 'border-slate-700 focus:ring-amber-500/50'
                     }`}
                     aria-label="Email address"
                   />
@@ -246,7 +252,9 @@ export function SignupScreen() {
                       setFormErrors((prev) => ({ ...prev, password: '' }))
                     }}
                     className={`w-full pl-12 pr-14 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all text-base sm:text-lg ${
-                      formErrors.password ? 'border-red-500/50 focus:ring-red-500/50' : 'border-slate-700 focus:ring-amber-500/50'
+                      formErrors.password
+                        ? 'border-red-500/50 focus:ring-red-500/50'
+                        : 'border-slate-700 focus:ring-amber-500/50'
                     }`}
                     aria-label="Password"
                   />
@@ -269,15 +277,21 @@ export function SignupScreen() {
                 <p className="text-slate-400 text-sm mb-3">Password requirements:</p>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${password.length >= 6 ? 'bg-green-500' : 'bg-slate-700'}`} />
+                    <div
+                      className={`w-4 h-4 rounded-full ${password.length >= 6 ? 'bg-green-500' : 'bg-slate-700'}`}
+                    />
                     <span className="text-slate-400 text-sm">At least 6 characters</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-700'}`} />
+                    <div
+                      className={`w-4 h-4 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-700'}`}
+                    />
                     <span className="text-slate-400 text-sm">One uppercase letter</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${/[0-9]/.test(password) ? 'bg-green-500' : 'bg-slate-700'}`} />
+                    <div
+                      className={`w-4 h-4 rounded-full ${/[0-9]/.test(password) ? 'bg-green-500' : 'bg-slate-700'}`}
+                    />
                     <span className="text-slate-400 text-sm">One number</span>
                   </div>
                 </div>
@@ -357,15 +371,19 @@ export function SignupScreen() {
 
           {/* Terms and Privacy */}
           <div className="text-center pt-6 border-t border-slate-800">
-            <p className="text-slate-500 text-xs mb-2">
-              By creating an account, you agree to our
-            </p>
+            <p className="text-slate-500 text-xs mb-2">By creating an account, you agree to our</p>
             <div className="flex justify-center gap-4">
-              <Link href="/terms" className="text-slate-400 hover:text-amber-500 text-xs transition-colors">
+              <Link
+                href="/terms"
+                className="text-slate-400 hover:text-amber-500 text-xs transition-colors"
+              >
                 Terms of Service
               </Link>
               <span className="text-slate-600">and</span>
-              <Link href="/privacy" className="text-slate-400 hover:text-amber-500 text-xs transition-colors">
+              <Link
+                href="/privacy"
+                className="text-slate-400 hover:text-amber-500 text-xs transition-colors"
+              >
                 Privacy Policy
               </Link>
             </div>

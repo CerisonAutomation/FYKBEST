@@ -20,8 +20,9 @@ function CallbackHandler() {
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
         router.push(next)
-      } catch (error) {
-        console.error('Auth callback error:', error)
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.error('Auth callback error:', errorMessage)
         router.push('/login?error=callback_failed')
       }
     }

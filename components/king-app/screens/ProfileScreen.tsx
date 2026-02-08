@@ -17,11 +17,17 @@ import {
   User as UserIcon,
   Zap,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export function ProfileScreen() {
   const vibrate = useVibrate()
   const { user, isAiEnabled, setIsAiEnabled, setStage, setUser } = useAppStore()
+  const [isClient, setIsClient] = useState(false)
+
+  // Fix hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -86,7 +92,7 @@ export function ProfileScreen() {
     }
   }
 
-  return (
+  return isClient ? (
     <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex justify-between items-end">
@@ -259,7 +265,7 @@ export function ProfileScreen() {
         <p className="mt-1">Account ID: {user?.id?.substring(0, 8) || 'xxxxxxxx'}</p>
       </motion.div>
     </div>
-  )
+  ) : null
 }
 
 interface ToggleSettingProps {
@@ -295,10 +301,7 @@ function ToggleSetting({
       />
       <span className="flex-1 text-sm text-slate-300 font-light">{label}</span>
       <div
-        className={`
-        w-10 h-6 rounded-full relative transition-all duration-300 flex-shrink-0
-        ${isChecked ? 'bg-amber-600' : 'bg-slate-700'}
-      `}
+        className={`w-10 h-6 rounded-full relative transition-all duration-300 flex-shrink-0 ${isChecked ? 'bg-amber-600' : 'bg-slate-700'}`}
       >
         <motion.div
           animate={{ x: isChecked ? 16 : 0 }}

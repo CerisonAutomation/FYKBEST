@@ -5,10 +5,19 @@ const nextConfig = {
   trailingSlash: false,
   reactStrictMode: true,
 
+  // Output configuration
+  output: 'export',
+
+  // Skip static generation for error pages that use client-side features
+  output: 'standalone',
+
   // Dist directory
   distDir: '.next',
 
   // Next.js 15+ Features
+  // Enable typed routes for better type safety (moved from experimental)
+  typedRoutes: true,
+
   experimental: {
     // React Compiler for automatic memoization
     reactCompiler: true,
@@ -31,9 +40,6 @@ const nextConfig = {
     // Static generation optimization
     staticGenerationRetryCount: 3,
     staticGenerationMaxConcurrency: 8,
-
-    // Enable typed routes for better type safety
-    typedRoutes: true,
   },
 
   // Image optimization

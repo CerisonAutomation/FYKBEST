@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useAppStore } from '@/lib/store'
 import { useParties } from '@/lib/supabase/useParties' // New hook
 import { motion } from 'framer-motion'
 import { Coffee, Dumbbell, Film, Plus, Users, Utensils, Wine } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type React from 'react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { PartyCard } from '../components/PartyCard'
 
 // ... (EVENT_TYPES and EventTypeIcon remain same)

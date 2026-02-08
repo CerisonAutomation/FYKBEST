@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useFormatTime, useValidateEmail, useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle, Mail, RefreshCw, Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export function MagicLinkScreen() {
   const vibrate = useVibrate()

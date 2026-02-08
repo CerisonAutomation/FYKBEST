@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import type { Message } from '@/types/app'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, MessageCircle, Search, Send, X, Zap } from 'lucide-react'
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const quickReplySuggestions = [
   'That sounds great!',
@@ -18,7 +18,7 @@ const quickReplySuggestions = [
 // Debounced AI suggestions to prevent performance issues
 const useDebouncedSuggestions = (messages: Message[], isAiEnabled: boolean) => {
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchSuggestions = useCallback(async () => {
     if (!isAiEnabled || messages.length === 0) {
@@ -35,13 +35,16 @@ const useDebouncedSuggestions = (messages: Message[], isAiEnabled: boolean) => {
     // Simulate AI API call with proper error handling
     try {
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Generate contextual suggestions based on last message
       const contextualSuggestions = quickReplySuggestions
-        .filter(suggestion =>
-          lastMessage.text.toLowerCase().includes('hello') && suggestion.toLowerCase().includes('hello') ||
-          lastMessage.text.toLowerCase().includes('meet') && suggestion.toLowerCase().includes('meet')
+        .filter(
+          (suggestion) =>
+            (lastMessage.text.toLowerCase().includes('hello') &&
+              suggestion.toLowerCase().includes('hello')) ||
+            (lastMessage.text.toLowerCase().includes('meet') &&
+              suggestion.toLowerCase().includes('meet'))
         )
         .slice(0, 3)
 
@@ -90,6 +93,7 @@ export function MessagesScreen() {
   } = useAppStore()
 
   const [inputValue, setInputValue] = useState('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   // Fix hydration mismatch
@@ -97,10 +101,15 @@ export function MessagesScreen() {
     setIsClient(true)
   }, [])
 
+  const activeMatch = matches.find((match) => match.id === activeChat)
+  const messages = chatMessages[`chat_${activeChat}`] || []
   const chatContainerRef = useScrollToBottom(chatMessages[`chat_${activeChat}`])
 
   // Use optimized AI suggestions with debouncing
-  const { suggestions, fetchSuggestions } = useDebouncedSuggestions(chatMessages[`chat_${activeChat}`] || [], isAiEnabled)
+  const { suggestions, fetchSuggestions } = useDebouncedSuggestions(
+    chatMessages[`chat_${activeChat}`] || [],
+    isAiEnabled
+  )
 
   useEffect(() => {
     if (!isClient || !activeChat) return
@@ -360,6 +369,7 @@ export function MessagesScreen() {
                       vibrate([10])
                       handleSendMessage(`I challenged you to ${game.label}!`)
                       // In a real app, you'd send the game object here.
+                      console.log('[MessagesScreen] Game challenge sent:', game.label)
                     }}
                     className="whitespace-nowrap px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-full text-[10px] font-black border border-slate-700 transition-all uppercase tracking-tighter"
                   >
@@ -394,7 +404,7 @@ export function MessagesScreen() {
                     )}
                     <span>AI Assistant</span>
                   </div>
-                  {aiSuggestions.map((reply, idx) => (
+                  {suggestions.map((reply, idx) => (
                     <motion.button
                       key={idx}
                       initial={{ opacity: 0, scale: 0.9 }}

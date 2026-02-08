@@ -9,7 +9,7 @@
  * - Detailed rate limit headers
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
 interface RateLimitConfig {
   limit: number
@@ -51,7 +51,9 @@ function getClientIdentifier(request: NextRequest): string {
     try {
       // Extract user ID from JWT token (simplified)
       const token = authHeader.replace('Bearer ', '')
-      const payload = JSON.parse(atob(token.split('.')[1]))
+      const parts = token.split('.')
+      if (!parts[1]) throw new Error('Invalid token structure')
+      const payload = JSON.parse(atob(parts[1]))
       if (payload.sub) {
         return `user:${payload.sub}`
       }
@@ -59,32 +61,30 @@ function getClientIdentifier(request: NextRequest): string {
       // Continue to IP-based limiting
     }
   }
-  
+
   // Fall back to IP address
   const forwardedFor = request.headers.get('x-forwarded-for')
   const realIp = request.headers.get('x-real-ip')
   const ip = forwardedFor?.split(',')[0] || realIp || 'unknown'
-  
+
   return `ip:${ip}`
 }
 
 /**
  * Check rate limit for a given identifier
  */
-function checkRateLimit(
-  identifier: string, 
-  config: RateLimitConfig
-): RateLimitResult {
+function checkRateLimit(identifier: string, config: RateLimitConfig): RateLimitResult {
   const now = Date.now()
   const key = identifier
-  
+
   // Clean up expired entries periodically
-  if (Math.random() < 0.1) { // 10% chance to cleanup
+  if (Math.random() < 0.1) {
+    // 10% chance to cleanup
     cleanupExpiredEntries()
   }
-  
+
   const existing = rateLimitStore.get(key)
-  
+
   if (!existing || now > existing.resetTime) {
     // First request or window expired
     const newEntry = {
@@ -92,7 +92,7 @@ function checkRateLimit(
       resetTime: now + config.windowMs,
     }
     rateLimitStore.set(key, newEntry)
-    
+
     return {
       success: true,
       limit: config.limit,
@@ -100,14 +100,14 @@ function checkRateLimit(
       resetTime: newEntry.resetTime,
     }
   }
-  
+
   // Update existing entry
   existing.count += 1
   rateLimitStore.set(key, existing)
-  
+
   const remaining = Math.max(0, config.limit - existing.count)
   const retryAfter = Math.ceil((existing.resetTime - now) / 1000)
-  
+
   return {
     success: existing.count <= config.limit,
     limit: config.limit,
@@ -120,18 +120,15 @@ function checkRateLimit(
 /**
  * Set rate limit headers on response
  */
-function setRateLimitHeaders(
-  response: NextResponse, 
-  result: RateLimitResult
-): NextResponse {
+function setRateLimitHeaders(response: NextResponse, result: RateLimitResult): NextResponse {
   response.headers.set('X-RateLimit-Limit', result.limit.toString())
   response.headers.set('X-RateLimit-Remaining', result.remaining.toString())
   response.headers.set('X-RateLimit-Reset', result.resetTime.toString())
-  
+
   if (result.retryAfter) {
     response.headers.set('Retry-After', result.retryAfter.toString())
   }
-  
+
   return response
 }
 
@@ -146,21 +143,27 @@ export function withRateLimit<T extends any[]>(
   const defaultConfigs: Record<string, RateLimitConfig> = {
     'api-read': { limit: 100, windowMs: 60000 }, // 100 requests per minute
     'api-write': { limit: 20, windowMs: 60000 }, // 20 requests per minute
-    'auth': { limit: 5, windowMs: 900000 }, // 5 requests per 15 minutes
-    'upload': { limit: 10, windowMs: 3600000 }, // 10 uploads per hour
+    auth: { limit: 5, windowMs: 900000 }, // 5 requests per 15 minutes
+    upload: { limit: 10, windowMs: 3600000 }, // 10 uploads per hour
   }
-  
-  const config = { ...defaultConfigs[type], ...customConfig }
-  
+
+  const config = {
+    ...defaultConfigs[type],
+    ...customConfig,
+    // Ensure required properties are defined
+    limit: (customConfig as any)?.limit ?? (defaultConfigs[type] as any).limit,
+    windowMs: (customConfig as any)?.windowMs ?? (defaultConfigs[type] as any).windowMs,
+  } as RateLimitConfig
+
   return async (...args: T): Promise<NextResponse> => {
     const request = args[0] as NextRequest
-    
+
     // Get client identifier
     const identifier = getClientIdentifier(request)
-    
+
     // Check rate limit
     const rateLimitResult = checkRateLimit(identifier, config)
-    
+
     // If rate limited, return 429 response
     if (!rateLimitResult.success) {
       const response = NextResponse.json(
@@ -171,20 +174,20 @@ export function withRateLimit<T extends any[]>(
         },
         { status: 429 }
       )
-      
+
       return setRateLimitHeaders(response, rateLimitResult)
     }
-    
+
     try {
       // Execute the original handler
       const response = await handler(...args)
-      
+
       // Set rate limit headers on successful response
       return setRateLimitHeaders(response, rateLimitResult)
     } catch (error) {
       // Log rate limit errors
       console.error('Rate limit error:', error)
-      
+
       const response = NextResponse.json(
         {
           error: 'Internal server error',
@@ -192,7 +195,7 @@ export function withRateLimit<T extends any[]>(
         },
         { status: 500 }
       )
-      
+
       return setRateLimitHeaders(response, rateLimitResult)
     }
   }
@@ -204,12 +207,12 @@ export function withRateLimit<T extends any[]>(
 export function getRateLimitStatus(request: NextRequest): RateLimitResult | null {
   const identifier = getClientIdentifier(request)
   const now = Date.now()
-  
+
   const existing = rateLimitStore.get(identifier)
   if (!existing || now > existing.resetTime) {
     return null
   }
-  
+
   return {
     success: true,
     limit: 100, // Default limit

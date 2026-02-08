@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export function SettingsNotificationsScreen() {
   const vibrate = useVibrate()
@@ -23,16 +26,24 @@ export function SettingsNotificationsScreen() {
   useEffect(() => {
     const loadSettings = async () => {
       if (!user) return
-      const { data } = await (supabase.from('profiles') as any)
-        .select('settings')
-        .eq('user_id', user.id)
-        .single()
+      try {
+        const { data } = await (supabase.from('profiles') as any)
+          .select('settings')
+          .eq('user_id', user.id)
+          .single()
 
-      const settingsData = data?.settings?.notifications
-      if (settingsData) {
-        setSettings(settingsData)
+        const settingsData = data?.settings?.notifications
+        if (settingsData) {
+          setSettings(settingsData)
+        }
+      } catch (error) {
+        console.error('[SettingsNotificationsScreen] Settings load error:', error)
+        console.error('[SettingsNotificationsScreen] Additional error context:', {
+          error,
+          stack: (error as any).stack,
+        })
+        alert('Failed to load settings. Please try again.')
       }
-      setLoading(false)
     }
     loadSettings()
   }, [user])

@@ -25,8 +25,9 @@ export function BookingsScreen() {
       if (error) throw error
       updateBooking(id, { status: 'cancelled' })
     } catch (err) {
-      console.error(err)
+      console.error('[BookingsScreen] Failed to cancel booking:', err)
       alert('Failed to cancel booking.')
+      console.error('[BookingsScreen] Booking cancellation error:', err)
     } finally {
       setIsProcessing(null)
     }

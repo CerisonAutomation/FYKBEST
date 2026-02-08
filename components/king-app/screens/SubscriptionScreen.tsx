@@ -83,8 +83,9 @@ export function SubscriptionScreen() {
         setStage('browse')
       }
     } catch (error) {
-      console.error('Subscription failed:', error)
+      console.error('[SubscriptionScreen] Subscription failed:', error)
       alert('Subscription failed. Please check your Stripe keys in Edge Functions.')
+      console.error('[SubscriptionScreen] Subscription error:', error)
     } finally {
       setLoading(false)
     }

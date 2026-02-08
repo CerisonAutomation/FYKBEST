@@ -15,6 +15,10 @@ interface PerformanceMetrics {
   inp: number | null
 }
 
+interface TimingData {
+  [key: string]: number
+}
+
 interface SearchMetrics {
   queryCount: number
   totalQueryTime: number
@@ -31,6 +35,8 @@ let metrics: PerformanceMetrics = {
   ttfb: null,
   inp: null,
 }
+
+let timingData: TimingData = {}
 
 let searchMetrics: SearchMetrics = {
   queryCount: 0,
@@ -236,9 +242,31 @@ export function usePerformanceMonitoring() {
 }
 
 /**
+ * Performance monitor object with record/start/end methods
+ */
+export const performanceMonitor = {
+  record: (name: string, value: number) => {
+    console.log('[Performance] ' + name + ': ' + Math.round(value) + 'ms')
+  },
+  start: (name: string) => {
+    if (typeof window !== 'undefined') {
+      timingData[name] = performance.now()
+    }
+  },
+  end: (name: string) => {
+    if (typeof window !== 'undefined' && timingData[name]) {
+      const duration = performance.now() - timingData[name]
+      console.log('[Performance] ' + name + ': ' + Math.round(duration) + 'ms')
+      delete timingData[name]
+    }
+  },
+}
+
+/**
  * Clear all metrics (for testing)
  */
 export function clearMetrics() {
   metrics = { fcp: null, lcp: null, fid: null, cls: null, ttfb: null, inp: null }
   searchMetrics = { queryCount: 0, totalQueryTime: 0, cacheHits: 0, cacheMisses: 0 }
+  timingData = {}
 }

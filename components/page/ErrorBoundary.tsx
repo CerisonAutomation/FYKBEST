@@ -5,12 +5,13 @@
  * Catches and displays errors gracefully
  */
 
+import React, { useState, useEffect } from 'react'
+import { ErrorBoundary as BaseErrorBoundary } from '@/components/ErrorBoundary'
 import { Button } from '@/components/ui/button'
 import { captureException } from '@/lib/monitoring/errors'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { AlertTriangle, Bug, Home, RefreshCw } from 'lucide-react'
-import { useEffect } from 'react'
 
 interface ErrorBoundaryProps {
   error: Error & { digest?: string }
@@ -25,9 +26,18 @@ export function ErrorBoundary({
   className,
   showDetails = process.env.NODE_ENV === 'development',
 }: ErrorBoundaryProps) {
-  useEffect(() => {
+  // Only run client-side code on client
+  const [isClient, setIsClient] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  React.useEffect(() => {
     // Log error to monitoring service
-    console.error('Page error:', error)
+    console.error('[Page Error] Caught error:', error)
+    console.error('[Page Error] URL:', typeof window !== 'undefined' ? window.location.href : 'SSR')
+    console.error('[Page Error] Timestamp:', new Date().toISOString())
 
     // Send to error tracking
     captureException(error, {
@@ -35,6 +45,19 @@ export function ErrorBoundary({
       digest: error.digest,
     })
   }, [error])
+
+  // Don't render interactive elements during SSR
+  if (!isClient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Loading...</h2>
+          <p className="text-slate-400">Please wait</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -121,10 +144,22 @@ export function GlobalError({
   reset: () => void
 }) {
   return (
-    <html lang="en">
+    <div lang="en">
       <body className="bg-black text-white min-h-screen flex items-center justify-center p-4">
-        <ErrorBoundary error={error} reset={reset} />
+        <BaseErrorBoundary
+          error={error}
+          reset={reset}
+          onError={(error, errorInfo) => {
+            console.error('[GlobalError] Caught error:', error)
+            console.error('[GlobalError] Error details:', {
+              timestamp: new Date().toISOString(),
+              screen: 'GlobalError',
+              error: error.message,
+              componentStack: errorInfo.componentStack,
+            })
+          }}
+        />
       </body>
-    </html>
+    </div>
   )
 }

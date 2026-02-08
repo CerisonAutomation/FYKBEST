@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { AlertCircle, ArrowRight, CheckCircle, FileText, Loader2, Shield } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function VerificationScreen() {
   const vibrate = useVibrate()
@@ -41,8 +44,10 @@ export function VerificationScreen() {
         vibrate([100, 50, 100])
       }
     } catch (err) {
-      console.error('Verification failed:', err)
+      console.error('[VerificationScreen] Verification failed:', err)
       setStatus('error')
+      alert('Verification failed. Please try again.')
+      console.error('[VerificationScreen] Verification error:', err)
     } finally {
       setLoading(false)
     }

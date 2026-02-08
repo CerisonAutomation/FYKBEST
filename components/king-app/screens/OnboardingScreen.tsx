@@ -1,9 +1,12 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Award, ChevronRight, Lock, Shield } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export function OnboardingScreen() {
   const vibrate = useVibrate()

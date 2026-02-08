@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
@@ -14,11 +15,13 @@ import {
   Share2,
   ShieldCheck,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function EventDetailScreen() {
   const vibrate = useVibrate()
-  const { setStage, user, selectedParty } = useAppStore()
+  const { setStage, user, selectedParty, setUser } = useAppStore()
   const [loading, setLoading] = useState(false)
   const [joined, setJoined] = useState(false)
 
@@ -41,9 +44,12 @@ export function EventDetailScreen() {
       const { error } = await (supabase.rpc as any)('join_party', { party_id: event.id })
       if (error) throw error
       setJoined(true)
-      vibrate([20, 50, 20])
+      setUser({ ...user!, parties: [...(user?.parties || []), event] })
+      setStage('party')
     } catch (err) {
-      console.error(err)
+      console.error('[EventDetailScreen] Failed to join party:', err)
+      alert('Failed to join party. Please try again.')
+      console.error('[EventDetailScreen] Party join error:', err)
     } finally {
       setLoading(false)
     }

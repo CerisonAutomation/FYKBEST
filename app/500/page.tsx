@@ -1,40 +1,16 @@
-'use client'
-
-/**
- * Root Error Page
- * Catches errors in root layout
- */
-
-import { motion } from 'framer-motion'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
-import { useEffect } from 'react'
 
 export const metadata = {
-  title: 'Something went wrong',
+  title: 'Internal Server Error',
   robots: {
     index: false,
     follow: true,
   },
 }
 
-export default function RootError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  useEffect(() => {
-    // Log error to monitoring service
-    console.error('Root error:', error)
-    console.error('Root error URL:', typeof window !== 'undefined' ? window.location.href : 'SSR')
-    console.error('Root error timestamp:', new Date().toISOString())
-  }, [error])
-
+export default function ServerErrorPage() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 text-center"
     >
       <div className="w-24 h-24 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
@@ -48,14 +24,13 @@ export default function RootError({
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          type="button"
-          onClick={reset}
+        <a
+          href="/"
           className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again
-        </button>
+        </a>
 
         <a
           href="/"
@@ -65,6 +40,6 @@ export default function RootError({
           Go Home
         </a>
       </div>
-    </motion.div>
+    </div>
   )
 }

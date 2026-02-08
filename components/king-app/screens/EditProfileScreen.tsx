@@ -48,8 +48,9 @@ export function EditProfileScreen() {
 
       setStage('profile')
     } catch (error) {
-      console.error('Error saving profile:', error)
+      console.error('[EditProfileScreen] Error saving profile:', error)
       alert('Failed to save profile changes.')
+      console.error('[EditProfileScreen] Profile save error:', error)
     } finally {
       setLoading(false)
     }

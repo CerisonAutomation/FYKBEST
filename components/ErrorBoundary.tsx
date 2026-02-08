@@ -35,7 +35,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[ErrorBoundary] Caught error:', error)
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack)
+    console.error('[ErrorBoundary] Error details:', {
+      timestamp: new Date().toISOString(),
+      screen: 'ErrorBoundary',
+      error: error.message,
+    })
+    console.error('[ErrorBoundary] Component:', errorInfo.componentStack)
 
     this.props.onError?.(error, errorInfo)
 

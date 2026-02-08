@@ -1,8 +1,9 @@
+'use client'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 // Environment variable validation with defaults and proper typing
-const getEnvVar = (key: string, defaultValue: string = ''): string => {
+const getEnvVar = (key: string, defaultValue = ''): string => {
   const value = process.env[key]
   if (value === undefined) {
     console.warn(`Environment variable ${key} is not set, using default: ${defaultValue}`)
@@ -21,12 +22,12 @@ const handleApiError = (error: unknown, context: string) => {
 
   return {
     error: errorMessage,
-    userMessage
+    userMessage,
   }
 }
 
 // Performance monitoring hook
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const usePerformanceMonitor = () => {
   const [metrics, setMetrics] = useState({
@@ -38,7 +39,7 @@ const usePerformanceMonitor = () => {
   useEffect(() => {
     const updateMetrics = () => {
       // Simulate performance metrics
-      setMetrics(prev => ({
+      setMetrics((prev) => ({
         ...prev,
         fps: Math.max(30, Math.min(60, prev.fps + Math.random() * 10 - 5)),
         memory: Math.max(0, prev.memory + Math.random() * 20 - 10),

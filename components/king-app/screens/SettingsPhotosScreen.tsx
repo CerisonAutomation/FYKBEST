@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Eye, Loader2, Lock, Plus, Trash2 } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 // Generate stable photo IDs to prevent hydration mismatch
 const generateStablePhotoId = (index: number) => {
@@ -16,22 +16,27 @@ const generateStablePhotoId = (index: number) => {
 
 // Optimized photo array operations with memoization
 const usePhotoOperations = (photos: string[]) => {
-  return useMemo(() => ({
-    addPhoto: (newPhoto: string) => {
-      const updatedPhotos = [...photos, newPhoto]
-      return updatedPhotos
-    },
-    removePhoto: (index: number) => {
-      const updatedPhotos = photos.filter((_, i) => i !== index)
-      return updatedPhotos
-    },
-    reorderPhotos: (fromIndex: number, toIndex: number) => {
-      const newPhotos = [...photos]
-      const [movedPhoto] = newPhotos.splice(fromIndex, 1)
-      newPhotos.splice(toIndex, 0, movedPhoto)
-      return newPhotos
-    }
-  }), [photos])
+  return useMemo(
+    () => ({
+      addPhoto: (newPhoto: string) => {
+        const updatedPhotos = [...photos, newPhoto]
+        return updatedPhotos
+      },
+      removePhoto: (index: number) => {
+        const updatedPhotos = photos.filter((_, i) => i !== index)
+        return updatedPhotos
+      },
+      reorderPhotos: (fromIndex: number, toIndex: number) => {
+        const newPhotos = [...photos]
+        const [movedPhoto] = newPhotos.splice(fromIndex, 1)
+        if (movedPhoto) {
+          newPhotos.splice(toIndex, 0, movedPhoto)
+        }
+        return newPhotos
+      },
+    }),
+    [photos]
+  )
 }
 
 export function SettingsPhotosScreen() {
@@ -78,6 +83,7 @@ export function SettingsPhotosScreen() {
     } catch (err) {
       console.error('Upload error:', err)
       alert('An unexpected error occurred. Please try again.')
+      console.error('[SettingsPhotosScreen] Failed to delete photo:', err)
     } finally {
       setLoading(false)
     }

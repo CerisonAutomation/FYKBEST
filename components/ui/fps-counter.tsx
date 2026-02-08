@@ -5,7 +5,7 @@
  * Uses requestAnimationFrame for accurate timing
  */
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function FPSCounter() {
   const [fps, setFps] = useState<number>(0)
@@ -18,16 +18,18 @@ export function FPSCounter() {
     const calculateFPS = () => {
       frameCount.current++
       const currentTime = performance.now()
-      
+
       if (currentTime >= lastTime.current + 1000) {
         // Calculate FPS every second
-        const currentFps = Math.round((frameCount.current * 1000) / (currentTime - lastTime.current))
+        const currentFps = Math.round(
+          (frameCount.current * 1000) / (currentTime - lastTime.current)
+        )
         setFps(currentFps)
-        
+
         // Reset counters
         frameCount.current = 0
         lastTime.current = currentTime
-        
+
         // Log performance warnings
         if (currentFps < 30) {
           console.warn(`⚠️ Low FPS detected: ${currentFps}`)
@@ -35,7 +37,7 @@ export function FPSCounter() {
           console.info(`ℹ️ Moderate FPS: ${currentFps}`)
         }
       }
-      
+
       animationId = requestAnimationFrame(calculateFPS)
     }
 
@@ -54,11 +56,7 @@ export function FPSCounter() {
     return 'text-red-500'
   }
 
-  return (
-    <span className={`font-mono ${getFPSColor(fps)}`}>
-      {fps}
-    </span>
-  )
+  return <span className={`font-mono ${getFPSColor(fps)}`}>{fps}</span>
 }
 
 // Hook for FPS monitoring in components
@@ -70,7 +68,7 @@ export function useFPSMonitor() {
 
   const startMonitoring = () => {
     if (isMonitoring.current) return
-    
+
     isMonitoring.current = true
     frameCount.current = 0
     lastTime.current = performance.now()
@@ -78,15 +76,17 @@ export function useFPSMonitor() {
     const calculateFPS = () => {
       frameCount.current++
       const currentTime = performance.now()
-      
+
       if (currentTime >= lastTime.current + 1000) {
-        const currentFps = Math.round((frameCount.current * 1000) / (currentTime - lastTime.current))
+        const currentFps = Math.round(
+          (frameCount.current * 1000) / (currentTime - lastTime.current)
+        )
         setFps(currentFps)
-        
+
         frameCount.current = 0
         lastTime.current = currentTime
       }
-      
+
       if (isMonitoring.current) {
         requestAnimationFrame(calculateFPS)
       }

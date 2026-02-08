@@ -5,7 +5,18 @@
  * Implements server-side rendering with strategic client-side hydration.
  */
 
-import { ArrowRight, Calendar, Crown, MessageCircle, Shield, Star, Users, Zap, Lock, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  Calendar,
+  Crown,
+  Lock,
+  MessageCircle,
+  Shield,
+  Sparkles,
+  Star,
+  Users,
+  Zap,
+} from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
@@ -15,10 +26,16 @@ export const metadata: Metadata = {
   title: 'KING SOCIAL | Premium Social Network - Join 50K+ Verified Members',
   description:
     'Elite social marketplace for discerning individuals. Connect with verified companions, discover exclusive events. Join 50K+ members worldwide.',
-  keywords: ['premium social network', 'elite dating', 'verified companions', 'exclusive events', 'luxury social'],
+  keywords: [
+    'premium social network',
+    'elite dating',
+    'verified companions',
+    'exclusive events',
+    'luxury social',
+  ],
   openGraph: {
     title: 'KING SOCIAL | Premium Social Network',
-    description: 'Join 50K+ verified members in the world\'s most exclusive social network.',
+    description: "Join 50K+ verified members in the world's most exclusive social network.",
     type: 'website',
     locale: 'en_US',
     siteName: 'KING SOCIAL',
@@ -45,7 +62,7 @@ export default async function LandingPage() {
       {/* Optimized Hero Section with conversion focus */}
       <section className="relative pt-20 pb-32 overflow-hidden">
         {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-transparent animate-pulse" />
 
         {/* Floating elements for visual interest */}
         <div className="absolute top-20 left-10 w-2 h-2 bg-amber-500 rounded-full animate-ping" />
@@ -81,8 +98,10 @@ export default async function LandingPage() {
 
           {/* Enhanced value proposition */}
           <p className="text-xl md:text-2xl text-slate-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Join the world's most exclusive social network. Connect with <span className="text-amber-500 font-semibold">verified companions</span>,
-            attend <span className="text-amber-500 font-semibold">elite events</span>, and experience <span className="text-amber-500 font-semibold">premium connections</span>.
+            Join the world's most exclusive social network. Connect with{' '}
+            <span className="text-amber-500 font-semibold">verified companions</span>, attend{' '}
+            <span className="text-amber-500 font-semibold">elite events</span>, and experience{' '}
+            <span className="text-amber-500 font-semibold">premium connections</span>.
           </p>
 
           {/* Social proof counter */}
@@ -269,8 +288,13 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
           <p>
             © 2025 KING SOCIAL. Trusted by 50K+ elite members worldwide.
-            <Link href="/privacy" className="hover:text-amber-500 ml-2">Privacy</Link> •
-            <Link href="/terms" className="hover:text-amber-500 ml-2">Terms</Link>
+            <Link href="/privacy" className="hover:text-amber-500 ml-2">
+              Privacy
+            </Link>{' '}
+            •
+            <Link href="/terms" className="hover:text-amber-500 ml-2">
+              Terms
+            </Link>
           </p>
         </div>
       </footer>

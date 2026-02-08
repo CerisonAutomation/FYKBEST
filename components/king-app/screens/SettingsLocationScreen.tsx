@@ -1,11 +1,14 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Globe, Loader2, MapPin, Navigation, Shield } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function SettingsLocationScreen() {
   const vibrate = useVibrate()
@@ -43,7 +46,9 @@ export function SettingsLocationScreen() {
       })
       setStage('settings')
     } catch (err) {
-      console.error(err)
+      console.error('[SettingsLocationScreen] Save failed:', err)
+      alert('Failed to update location. Please try again.')
+      console.error('[SettingsLocationScreen] Location update error:', err)
     } finally {
       setLoading(false)
     }

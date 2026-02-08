@@ -1,17 +1,27 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase/client'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Camera, Filter, Plus, Search, Shield, SlidersHorizontal, Zap, Heart, MessageCircle } from 'lucide-react'
+import {
+  Camera,
+  Filter,
+  Heart,
+  MessageCircle,
+  Plus,
+  Search,
+  Shield,
+  SlidersHorizontal,
+  Zap,
+} from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import React, { useState, useMemo, useCallback } from 'react'
 import { VirtuosoGrid } from 'react-virtuoso'
 import { ProfileCard } from '../components/ProfileCard'
-import { useAuth } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
 
 export function BrowseScreen() {
   const { user, searchQuery, setSearchQuery } = useAppStore()
@@ -67,7 +77,10 @@ export function BrowseScreen() {
       return data
     },
     initialPageParam: null as any,
-    getNextPageParam: (lastPage) => (lastPage.length === (isMobile ? 20 : 40) ? lastPage[lastPage.length - 1].profile_id : undefined),
+    getNextPageParam: (lastPage) =>
+      lastPage.length === (isMobile ? 20 : 40)
+        ? lastPage[lastPage.length - 1].profile_id
+        : undefined,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // Cache data for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
@@ -76,25 +89,38 @@ export function BrowseScreen() {
   const profiles = useMemo(() => data?.pages.flat() || [], [data])
 
   // Enhanced interaction handlers
-  const handleProfileView = useCallback((profileId: string) => {
-    vibrate([10])
-    // Track profile view
-    console.log(`Profile viewed: ${profileId}`)
-  }, [vibrate])
+  const handleProfileView = useCallback(
+    (profileId: string) => {
+      vibrate([10])
+      // Track profile view
+      console.log(`Profile viewed: ${profileId}`)
+    },
+    [vibrate]
+  )
 
-  const handleLikeProfile = useCallback((profileId: string) => {
-    vibrate([20, 10])
-    // Implement like functionality
-    console.log(`Profile liked: ${profileId}`)
-  }, [vibrate])
+  const handleLikeProfile = useCallback(
+    (profileId: string) => {
+      vibrate([20, 10])
+      // Implement like functionality
+      console.log(`Profile liked: ${profileId}`)
+    },
+    [vibrate]
+  )
 
-  const handleSendMessage = useCallback((profileId: string) => {
-    vibrate([15, 8, 15])
-    router.push(`/messages?with=${profileId}`)
-  }, [vibrate, router])
+  const handleSendMessage = useCallback(
+    (profileId: string) => {
+      vibrate([15, 8, 15])
+      router.push(`/messages?with=${profileId}`)
+    },
+    [vibrate, router]
+  )
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-950 via-black to-slate-950" role="main" aria-label="Browse profiles">
+    <div
+      className="flex flex-col h-full bg-gradient-to-b from-slate-950 via-black to-slate-950"
+      role="main"
+      aria-label="Browse profiles"
+    >
       {/* Responsive Header */}
       <div className="lg:hidden sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
@@ -126,7 +152,11 @@ export function BrowseScreen() {
 
       {/* Mobile Stories Bar - Simplified */}
       <div className="lg:hidden">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-4" role="region" aria-label="User stories">
+        <div
+          className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-4"
+          role="region"
+          aria-label="User stories"
+        >
           <button
             className="flex flex-col items-center gap-2 flex-shrink-0 p-3 bg-slate-800/50 rounded-xl min-w-[100px]"
             onClick={() => router.push('/edit-profile')}
@@ -186,7 +216,9 @@ export function BrowseScreen() {
                   setShowFilters(!showFilters)
                 }}
                 className={`p-3 rounded-xl transition-all ${
-                  showFilters ? 'bg-amber-600 border-amber-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'
+                  showFilters
+                    ? 'bg-amber-600 border-amber-500 text-white'
+                    : 'bg-slate-900 border-slate-800 text-slate-400'
                 }`}
                 aria-label="Toggle filters"
               >
@@ -231,7 +263,9 @@ export function BrowseScreen() {
                   <input
                     type="number"
                     value={filters.minAge}
-                    onChange={(e) => setFilters({ ...filters, minAge: Number.parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, minAge: Number.parseInt(e.target.value) })
+                    }
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-center text-sm"
                     aria-label="Minimum age"
                   />
@@ -239,7 +273,9 @@ export function BrowseScreen() {
                   <input
                     type="number"
                     value={filters.maxAge}
-                    onChange={(e) => setFilters({ ...filters, maxAge: Number.parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, maxAge: Number.parseInt(e.target.value) })
+                    }
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-center text-sm"
                     aria-label="Maximum age"
                   />
@@ -253,7 +289,9 @@ export function BrowseScreen() {
                 <button
                   onClick={() => setFilters({ ...filters, verifiedOnly: !filters.verifiedOnly })}
                   className={`w-full py-3 rounded-lg font-bold text-xs transition-all ${
-                    filters.verifiedOnly ? 'bg-amber-600/20 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-800 text-slate-500'
+                    filters.verifiedOnly
+                      ? 'bg-amber-600/20 border-amber-500 text-amber-400'
+                      : 'bg-slate-900 border-slate-800 text-slate-500'
                   }`}
                 >
                   VERIFIED ONLY
@@ -266,7 +304,9 @@ export function BrowseScreen() {
                 </label>
                 <select
                   value={filters.radiusKm}
-                  onChange={(e) => setFilters({ ...filters, radiusKm: Number.parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, radiusKm: Number.parseInt(e.target.value) })
+                  }
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm"
                   aria-label="Search radius"
                 >
@@ -294,7 +334,9 @@ export function BrowseScreen() {
       {/* Virtualized Grid - Responsive */}
       <div className={`flex-1 min-h-[400px] px-4 ${isMobile ? 'pb-20' : 'lg:pb-8'}`}>
         {isLoading ? (
-          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-4`}>
+          <div
+            className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-4`}
+          >
             {Array.from({ length: isMobile ? 6 : 12 }).map((_, i) => (
               <div
                 key={i}
@@ -324,27 +366,28 @@ export function BrowseScreen() {
             itemContent={(index, profile) => (
               <ProfileCard
                 key={profile.profile_id}
-                profile={{
-                  id: profile.profile_id,
-                  name: profile.display_name,
-                  age: profile.age,
-                  photos: profile.avatar_url ? [profile.avatar_url] : ['/placeholder.png'],
-                  city: profile.city,
-                  distance: (profile.distance_m / 1000).toFixed(1),
-                  verified: profile.verification_status === 'verified',
-                  online: profile.is_online,
-                  rate: profile.hourly_rate || 0,
-                  bio: profile.bio || '',
-                  interests: profile.interests || [],
-                  compatibility: 85,
-                } as any}
+                match={
+                  {
+                    id: profile.profile_id,
+                    name: profile.display_name,
+                    age: profile.age,
+                    photos: profile.avatar_url ? [profile.avatar_url] : ['/placeholder.png'],
+                    city: profile.city,
+                    distance: (profile.distance_m / 1000).toFixed(1),
+                    verified: profile.verification_status === 'verified',
+                    online: profile.is_online,
+                    rate: profile.hourly_rate || 0,
+                    bio: profile.bio || '',
+                    interests: profile.interests || [],
+                    compatibility: 85,
+                  } as any
+                }
                 index={index}
                 subscribed={true}
                 isFavorite={false}
                 onView={() => handleProfileView(profile.profile_id)}
                 onToggleFavorite={() => handleLikeProfile(profile.profile_id)}
                 onSubscribe={() => {}}
-                onMessage={() => handleSendMessage(profile.profile_id)}
               />
             )}
           />

@@ -1,10 +1,13 @@
 'use client'
 
+import { useAuth } from '@/lib/auth/hooks'
 import { useVibrate } from '@/lib/hooks'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Check, FileText, Lock, Shield, UserCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 const terms = [
   {

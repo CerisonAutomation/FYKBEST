@@ -11,11 +11,11 @@ async function createCustomerPortalSession(req: Request) {
   try {
     const { userId } = await req.json()
     const supabase = await createClient()
-    const { data: user }: any = await supabase
+    const { data: user } = (await supabase
       .from('profiles')
       .select('stripe_customer_id')
       .eq('user_id', userId)
-      .single()
+      .single()) as { data: { stripe_customer_id?: string } | null }
 
     if (!user?.stripe_customer_id)
       return NextResponse.json({ error: 'NO_STRIPE_CUSTOMER' }, { status: 404 })
@@ -26,8 +26,9 @@ async function createCustomerPortalSession(req: Request) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
@@ -35,24 +36,25 @@ async function getSubscriptionStatus(req: Request) {
   try {
     const { userId } = await req.json()
     const supabase = await createClient()
-    const { data: subscription }: any = await supabase
+    const { data: subscription } = (await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .single()) as { data: { tier?: string; expires_at?: string } | null }
 
     if (!subscription) return NextResponse.json({ error: 'NO_SUBSCRIPTION' }, { status: 404 })
 
     return NextResponse.json({
       isActive: true,
-      tier: (subscription as any).tier,
-      expiresAt: (subscription as any).expires_at,
+      tier: subscription?.tier || 'free',
+      expiresAt: subscription?.expires_at,
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 

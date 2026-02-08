@@ -36,18 +36,16 @@ function generateRequestId(): string {
  * Extract request context for logging
  */
 function getLogContext(request: Request): LogContext {
-  const headersList = headers()
+  const headersList = request.headers
   const requestId = generateRequestId()
-  
+
   return {
     requestId,
     timestamp: new Date().toISOString(),
     method: request.method,
     url: request.url,
     userAgent: headersList.get('user-agent') || undefined,
-    ip: headersList.get('x-forwarded-for') || 
-         headersList.get('x-real-ip') || 
-         'unknown',
+    ip: headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown',
   }
 }
 
@@ -55,12 +53,12 @@ function getLogContext(request: Request): LogContext {
  * Log successful API requests with performance metrics
  */
 export async function logApiRequest(
-  request: Request, 
-  action: string, 
+  request: Request,
+  action: string,
   data?: LogData
 ): Promise<void> {
   const context = getLogContext(request)
-  
+
   const logEntry = {
     level: 'info',
     type: 'api_request',
@@ -85,13 +83,9 @@ export async function logApiRequest(
 /**
  * Log API errors with detailed context
  */
-export async function logApiError(
-  request: Request, 
-  errorType: string, 
-  error: any
-): Promise<void> {
+export async function logApiError(request: Request, errorType: string, error: any): Promise<void> {
   const context = getLogContext(request)
-  
+
   const logEntry = {
     level: 'error',
     type: 'api_error',
@@ -131,11 +125,13 @@ function isSuspiciousError(errorType: string, error: any): boolean {
     'authorization_error',
     'validation_error',
   ]
-  
-  return suspiciousPatterns.some(pattern => 
-    errorType.toLowerCase().includes(pattern) ||
-    (error?.message && typeof error.message === 'string' && 
-     error.message.toLowerCase().includes(pattern))
+
+  return suspiciousPatterns.some(
+    (pattern) =>
+      errorType.toLowerCase().includes(pattern) ||
+      (error?.message &&
+        typeof error.message === 'string' &&
+        error.message.toLowerCase().includes(pattern))
   )
 }
 
@@ -150,7 +146,7 @@ function requiresSecurityReview(errorType: string): boolean {
     'suspicious_activity',
     'data_breach_attempt',
   ]
-  
+
   return reviewRequired.includes(errorType)
 }
 
@@ -163,7 +159,7 @@ export async function logSecurityEvent(
   details: LogData = {}
 ): Promise<void> {
   const context = getLogContext(request)
-  
+
   const logEntry = {
     level: 'warn',
     type: 'security_event',
@@ -174,7 +170,7 @@ export async function logSecurityEvent(
   }
 
   console.warn('Security Event:', JSON.stringify(logEntry))
-  
+
   // In production, send to security monitoring
   if (process.env.NODE_ENV === 'production') {
     // Example: await sendToSecurityService(logEntry)

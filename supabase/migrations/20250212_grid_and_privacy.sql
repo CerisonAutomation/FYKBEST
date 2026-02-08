@@ -5,7 +5,7 @@
 -- 1. ALBUMS & ITEMS
 CREATE TABLE IF NOT EXISTS public.albums (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     privacy TEXT NOT NULL DEFAULT 'private' CHECK (privacy IN ('public','friends','matches','private')),
     created_at TIMESTAMPTZ DEFAULT now()
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.album_items (
 -- Album Access Requests
 CREATE TABLE IF NOT EXISTS public.album_access_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    requester_id UUID NOT NULL REFERENCES public.users(id),
-    owner_id UUID NOT NULL REFERENCES public.users(id),
+    requester_id UUID NOT NULL REFERENCES auth.users(id),
+    owner_id UUID NOT NULL REFERENCES auth.users(id),
     album_id UUID NOT NULL REFERENCES public.albums(id),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.album_access_requests (
 -- 2. STORIES (Ephemeral)
 CREATE TABLE IF NOT EXISTS public.stories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     media_url TEXT NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '24 hours'),
     created_at TIMESTAMPTZ DEFAULT now()
@@ -62,7 +62,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     p.user_id,
     p.display_name,
     p.age,
@@ -87,7 +87,7 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 ALTER TABLE public.albums ENABLE ROW LEVEL SECURITY;
 CREATE POLICY album_view_policy ON public.albums FOR SELECT
 USING (
-    user_id = auth.uid() OR 
+    user_id = auth.uid() OR
     privacy = 'public' OR
     (privacy = 'matches' AND public.fn_is_match(auth.uid(), user_id)) OR
     EXISTS (SELECT 1 FROM album_access_requests WHERE album_id = id AND requester_id = auth.uid() AND status = 'approved')

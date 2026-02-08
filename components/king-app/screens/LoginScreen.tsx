@@ -6,12 +6,18 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export function LoginScreen() {
   const vibrate = useVibrate()
   const validateEmail = useValidateEmail()
   const router = useRouter()
+  const [isClient, setIsClient] = useState(false)
+
+  // Fix hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,7 +59,7 @@ export function LoginScreen() {
     }
   }
 
-  return (
+  return isClient ? (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-black text-white flex items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -190,5 +196,5 @@ export function LoginScreen() {
         </div>
       </motion.div>
     </div>
-  )
+  ) : null
 }

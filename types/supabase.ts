@@ -196,7 +196,7 @@ export type Database = {
           description: string | null
           id: string
           is_private: boolean | null
-          is_public: boolean | null
+          is_public?: boolean | null
           name: string | null
           owner_id: string
           title: string
@@ -908,7 +908,7 @@ export type Database = {
           end_time: string
           id: string
           image_url: string | null
-          is_public: boolean | null
+          is_public?: boolean | null
           location: unknown
           location_point: unknown
           max_attendees: number | null
@@ -2627,7 +2627,7 @@ export type Database = {
           profile_completion_score: number | null
           profile_data: Json | null
           profile_views: number | null
-          profile_visibility: Database['public']['Enums']['profile_visibility'] | null
+          profile_visibility: string | null
           pronouns: string[] | null
           quickshare_photos: Json | null
           read_receipts_enabled: boolean | null
@@ -2674,7 +2674,7 @@ export type Database = {
           username: string
           username_slug: string | null
           vaccination_status: Json | null
-          verification_status: Database['public']['Enums']['verification_status'] | null
+          verification_status: string | null
           verified_email: boolean | null
           verified_id: boolean | null
           verified_phone: boolean | null

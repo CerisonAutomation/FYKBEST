@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useBookings, useProfiles, useUserSync } from '@/lib/supabase/hooks'
 import { useNotifications } from '@/lib/supabase/useNotifications'
 import type { User } from '@/types/app'
+import type { PostgrestSingleResponse } from '@supabase/supabase-js'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -110,13 +111,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         try {
           // Fetch comprehensive user profile
-          const [profileResponse, userResponse] = await Promise.all([
+          const [profileResponse, userResponse] = (await Promise.all([
             supabase.from('profiles').select('*').eq('user_id', session.user.id).single(),
             supabase.from('users').select('*').eq('id', session.user.id).single(),
-          ])
+          ])) as [PostgrestSingleResponse<any>, PostgrestSingleResponse<any>]
 
-          const profile = profileResponse.data as any
-          const userRecord = userResponse.data as any
+          const profile = profileResponse.data
+          const userRecord = userResponse.data
 
           if (profile && userRecord) {
             // Map Supabase data to App User type
@@ -144,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               country: userRecord.country || undefined,
               age: userRecord.age || undefined,
               interests: userRecord.interests || [],
-              tribes: userRecord.interests || [],
+              tribes: userRecord.tribes || [],
               photos: userRecord.photos || [],
               height_cm: userRecord.height_cm || undefined,
               body_type: userRecord.body_type || undefined,
@@ -168,8 +169,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             setUser(appUser)
             setAuthenticated(true)
           }
-        } catch (error) {
-          console.error('Error syncing user profile:', error)
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.error(
+            '[AppShell] Error syncing user profile:',
+            error,
+            '\n[AppShell] Error details:',
+            { timestamp: new Date().toISOString(), error: errorMessage }
+          )
         }
       } else {
         setUser(null)

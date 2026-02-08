@@ -29,6 +29,7 @@ export interface User {
   presence: 'online' | 'away' | 'busy' | 'offline' | 'invisible'
   is_incognito: boolean
   available_now: boolean
+  parties?: any[]
   city?: string
   country?: string
   age?: number
